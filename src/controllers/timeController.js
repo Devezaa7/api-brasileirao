@@ -8,8 +8,8 @@ export default {
       const novo = await Time.create({ nome, pontos, vitorias, empates, derrotas, posicao });
       return res.status(201).json(novo);
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao criar time' });
+      console.error("Erro ao criar time", err);
+      return res.status(500).json({error: err.message});
     }
   },
 
