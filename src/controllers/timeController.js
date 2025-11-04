@@ -1,78 +1,96 @@
-
+import { Op } from 'sequelize';
 import Time from '../models/timeModel.js';
-export default {
 
-  async create(req, res) {
+class TimeController {
+  // Criar time
+  static async create(req, res, next) {
     try {
       const { nome, pontos, vitorias, empates, derrotas, posicao } = req.body;
-      const novo = await Time.create({ nome, pontos, vitorias, empates, derrotas, posicao });
-      return res.status(201).json(novo);
+      const time = await Time.create({ nome, pontos, vitorias, empates, derrotas, posicao });
+      res.status(201).json(time);
     } catch (err) {
-      console.error("Erro ao criar time", err);
-      return res.status(500).json({error: err.message});
+      next(err);
     }
-  },
+  }
 
-  async findAll(req, res) {
+  // Buscar todos (com filtros)
+  static async findAll(req, res, next) {
     try {
-      const times = await Time.findAll({ order: [['posicao', 'ASC'], ['pontos', 'DESC']] });
-      return res.json(times);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao listar times' });
-    }
-  },
+      const { nome, pontosMin, pontosMax } = req.query;
+      const where = {};
 
-  async findById(req, res) {
+      if (nome) where.nome = { [Op.like]: `%${nome}%` };
+      if (pontosMin || pontosMax) {
+        where.pontos = {};
+        if (pontosMin) where.pontos[Op.gte] = pontosMin;
+        if (pontosMax) where.pontos[Op.lte] = pontosMax;
+      }
+
+      const times = await Time.findAll({ where });
+      res.status(200).json(times);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Buscar por ID
+  static async findById(req, res, next) {
     try {
       const { id } = req.params;
       const time = await Time.findByPk(id);
-      if (!time) return res.status(404).json({ error: 'Time não encontrado' });
-      return res.json(time);
+      if (!time) return res.status(404).json({ erro: 'Time não encontrado' });
+      res.status(200).json(time);
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao buscar time' });
+      next(err);
     }
-  },
+  }
 
-  async update(req, res) {
+  // Atualizar time inteiro
+  static async update(req, res, next) {
     try {
       const { id } = req.params;
-      const campos = req.body;
-      const [linhas] = await Time.update(campos, { where: { id } });
-      if (linhas === 0) return res.status(404).json({ error: 'Time não encontrado' });
+      const [updated] = await Time.update(req.body, { where: { id } });
+      if (!updated) return res.status(404).json({ erro: 'Time não encontrado' });
       const time = await Time.findByPk(id);
-      return res.json(time);
+      res.status(200).json(time);
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao atualizar time' });
+      next(err);
     }
-  },
+  }
 
-  async patchPontos(req, res) {
+  // Atualizar apenas os pontos (PATCH)
+  static async patchPontos(req, res, next) {
     try {
       const { id } = req.params;
       const { pontos } = req.body;
       const time = await Time.findByPk(id);
-      if (!time) return res.status(404).json({ error: 'Time não encontrado' });
+      if (!time) return res.status(404).json({ erro: 'Time não encontrado' });
+
       time.pontos = pontos;
       await time.save();
-      return res.json(time);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao atualizar pontos' });
-    }
-  },
 
-  async remove(req, res) {
-    try {
-      const { id } = req.params;
-      const linhas = await Time.destroy({ where: { id } });
-      if (linhas === 0) return res.status(404).json({ error: 'Time não encontrado' });
-      return res.status(204).send();
+      res.status(200).json(time);
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Erro ao deletar time' });
+      next(err);
     }
   }
-};
+
+ // Deletar time
+static async remove(req, res, next) {
+  try {
+    const { id } = req.params;
+    const deleted = await Time.destroy({ where: { id } });
+
+    if (deleted) {
+      res.status(200).json({ message: `Time com ID ${id} deletado com sucesso.` });
+    } else {
+      res.status(404).json({ message: `Time com ID ${id} não encontrado.` });
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+}
+
+export default TimeController;

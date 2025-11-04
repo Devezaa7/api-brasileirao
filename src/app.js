@@ -1,38 +1,36 @@
 import express from 'express';
-import dotenv from 'dotenv';
-import router from './routes/timeRoutes.js';
+import morgan from 'morgan';
+import routes from './routes/index.js';
+import errorHandler from './middlewares/errorHandler.js';
 import sequelize from './config/database.js';
-import Time from './models/timeModel.js'; // garante que o model é carregado
-
-dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// 🔹 Middleware para ler JSON e formulários
+// Middleware para JSON e logs
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// 🔹 Prefixo das rotas da API
-app.use('/api', router);
-
-// 🔹 Teste rápido (opcional) — rota raiz
+// 🔹 Rota de boas-vindas (para testar no navegador)
 app.get('/', (req, res) => {
-  res.send('API do Brasileirão está rodando! ⚽');
+  res.send('API do Brasileirão está rodando!');
 });
 
-// 🔹 Conexão e sincronização do banco
-async function syncDb() {
-  try {
-    await sequelize.authenticate();
-    console.log('Conexão com o banco estabelecida com sucesso.');
+// 🔹 Rotas principais
+app.use('/api', routes);
 
-    await sequelize.sync({ alter: true }); // cria/atualiza o banco conforme os models
-    console.log('Banco sincronizado com sucesso.');
-  } catch (err) {
-    console.error('Erro ao sincronizar DB:', err);
-  }
-}
+// 🔹 Middleware global de erro (sempre o último)
+app.use(errorHandler);
 
-syncDb();
+// 🔹 Sincroniza o banco e inicia o servidor
+sequelize.sync()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando em http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Erro ao conectar no banco:', err);
+  });
 
 export default app;
