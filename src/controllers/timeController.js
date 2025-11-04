@@ -90,7 +90,24 @@ static async remove(req, res, next) {
     next(err);
   }
 }
+// Atualizar apenas a posição (PATCH)
+static async patchPosicao(req, res) {
+  try {
+    const { id } = req.params;
+    const { posicao } = req.body;
 
+    const time = await Time.findByPk(id);
+    if (!time) {
+      return res.status(404).json({ message: 'Time não encontrado' });
+    }
+
+    time.posicao = posicao;
+    await time.save();
+
+    res.status(200).json({ message: 'Posição atualizada com sucesso!', time });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao atualizar posição', error: error.message });
+  }
 }
-
+}
 export default TimeController;

@@ -1,13 +1,15 @@
 import express from 'express';
-import timeController from '../controllers/timeController.js';
+import TimeController from '../controllers/timeController.js';
 
 const router = express.Router();
 
-router.post('/', timeController.create);
-router.get('/', timeController.findAll);
-router.get('/:id', timeController.findById);
-router.put('/:id', timeController.update);
-router.patch('/:id/pontos', timeController.patchPontos);
-router.delete('/:id', timeController.remove);
+router.post('/', TimeController.create);
+router.get('/', TimeController.findAll);
+router.get('/:id', TimeController.findById);
+router.put('/:id', TimeController.update);
+router.patch('/:id/pontos', TimeController.patchPontos);
+router.delete('/:id', TimeController.remove);
+router.patch('/:id/posicao', TimeController.patchPosicao);
+
 
 export default router;

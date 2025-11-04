@@ -1,13 +1,16 @@
 import express from 'express';
 import morgan from 'morgan';
-import routes from './routes/index.js';
+import routes from './routes/index.js';       // Router principal
 import errorHandler from './middlewares/errorHandler.js';
 import sequelize from './config/database.js';
+import dotenv from 'dotenv';
+
+dotenv.config(); // carrega variáveis do .env
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para JSON e logs
+// 🔹 Middleware para JSON e logs
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -16,7 +19,7 @@ app.get('/', (req, res) => {
   res.send('API do Brasileirão está rodando!');
 });
 
-// 🔹 Rotas principais
+// 🔹 Rotas principais (Router do Express)
 app.use('/api', routes);
 
 // 🔹 Middleware global de erro (sempre o último)
